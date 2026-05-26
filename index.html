@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>记韵 · 个人博客</title>
+<style>
+/* ========== Reset & Base ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 17px; scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: #1a1a2e url('images/bg-texture.jpg') center/cover no-repeat fixed;
+  color: rgba(255, 255, 255, 0.85); line-height: 1.9;
+  min-height: 100vh;
+  position: relative;
+  letter-spacing: 0.01em;
+}
+/* 暖色叠加层：让背景图低调作为底纹 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 6, 2, 0.58);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* ========== Header ========== */
+.site-header {
+  padding: 0 32px; height: 64px; display: flex;
+  align-items: center; justify-content: space-between;
+  max-width: 1200px; margin: 0 auto;
+}
+.site-title {
+  font-size: 1.3rem; font-weight: 600; color: rgba(255, 255, 255, 0.92);
+  letter-spacing: 0.05em;
+}
+.nav-links { display: flex; gap: 32px; list-style: none; }
+.nav-links a {
+  text-decoration: none; color: rgba(255, 255, 255, 0.50); font-size: 0.95rem;
+  font-weight: 400; letter-spacing: 0.03em;
+  transition: color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.nav-links a:hover, .nav-links a.active { color: #c9a96e; }
+
+/* ========== Main Container ========== */
+.main-container {
+  max-width: 1200px; width: 100%; margin: 0 auto; padding: 56px 32px 96px;
+}
+
+/* ========== Home Grid (Three Panels) ========== */
+.home-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 24px;
+  min-height: 60vh;
+}
+.home-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ========== Panel Inner (background + overlay + hover) ========== */
+.panel-inner {
+  flex: 1;
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1),
+              box-shadow 0.4s cubic-bezier(0.25, 0.1, 0.25, 1),
+              filter 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+  display: flex;
+  flex-direction: column;
+  padding: 48px 32px;
+  z-index: 0;
+  cursor: pointer;
+  background-color: rgba(255, 255, 255, 0.06);
+  background-blend-mode: overlay;
+  box-shadow: 0 2px 24px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  /* 统一滤镜：降低饱和度、微加压暗、加暖色倾向 */
+  filter: saturate(0.8) brightness(0.8) sepia(0.2);
+}
+.panel-inner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(14, 10, 4, 0.58); /* 加深遮罩，增强融合度 */
+  transition: opacity 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+  z-index: 0;
+}
+/* 底部虚化过渡层：暖色调渐变 */
+.panel-inner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(245, 240, 230, 0.08) 65%,
+    rgba(245, 240, 230, 0.30) 80%,
+    rgba(245, 240, 230, 0.55) 92%,
+    rgba(245, 240, 230, 0.68) 100%
+  );
+  z-index: 0;
+  pointer-events: none;
+}
+.panel-inner:hover {
+  transform: scale(1.03);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.10);
+  /* hover 时让图片微微"亮起来" */
+  filter: saturate(0.9) brightness(0.9) sepia(0.1);
+}
+.panel-inner:hover::before {
+  opacity: 0.65;
+}
+.panel-inner > * {
+  position: relative;
+  z-index: 1;
+}
+
+.panel-placeholder {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1),
+              opacity 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+.panel-inner:hover .panel-placeholder {
+  transform: translateY(-4px);
+  opacity: 0.85;
+  color: rgba(255, 255, 255, 0.70);
+}
+
+.panel-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.90);
+  margin-bottom: 32px;
+  cursor: pointer;
+  user-select: none;
+  letter-spacing: 0.04em;
+  transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1),
+              color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.panel-title:hover { color: #c9a96e; }
+.panel-inner:hover .panel-title {
+  transform: translateY(-2px);
+}
+.panel-title .arrow {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 0.75rem;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.panel-title.expanded .arrow { transform: rotate(90deg); }
+
+.panel-articles {
+  display: none;
+  flex-direction: column;
+  gap: 0;
+  background: #faf9f5;
+  position: relative;
+  z-index: 2;
+  margin: 0 -32px;
+  padding: 16px 32px;
+  border-radius: 0 0 4px 4px;
+}
+.panel-articles.show { display: flex; }
+
+.panel-inner:has(.panel-articles:hover):hover {
+  transform: none;
+}
+.panel-inner:has(.panel-articles:hover):hover::before {
+  opacity: 0.48;
+}
+.panel-article-item {
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: padding 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.panel-article-item:last-child { border-bottom: none; }
+.panel-article-item h3 {
+  font-size: 0.95rem;
+  color: #3a3328;
+  font-weight: 500;
+  margin-bottom: 4px;
+  letter-spacing: 0.01em;
+  transition: color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.panel-article-item h3:hover { color: #c9a96e; }
+.panel-article-item .panel-item-meta {
+  font-size: 0.78rem;
+  color: rgba(0, 0, 0, 0.40);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.panel-item-tag {
+  color: #c9a96e;
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+}
+
+/* ========== Article List (legacy) ========== */
+.article-card {
+  padding: 24px 0; cursor: pointer;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+.article-card:first-of-type { padding-top: 0; }
+.article-card h2 { font-size: 1.2rem; margin-bottom: 6px; color: #3a3328; font-weight: 600; letter-spacing: 0.02em; }
+.article-card h2:hover { color: #c9a96e; }
+.article-meta {
+  font-size: 0.85rem; color: rgba(0, 0, 0, 0.40); margin-bottom: 8px;
+  display: flex; align-items: center; gap: 10px;
+}
+.article-card .summary { font-size: 0.95rem; color: rgba(0, 0, 0, 0.55); line-height: 1.85; }
+.card-tags { display: flex; gap: 8px; margin-top: 0; flex-wrap: wrap; }
+.card-tag {
+  color: #c9a96e; font-size: 0.8rem; background: none; padding: 0; border-radius: 0; letter-spacing: 0.03em;
+}
+
+/* ========== Back Button (circled arrow) ========== */
+.back-link {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.55);
+  text-decoration: none; cursor: pointer;
+  margin-bottom: 32px; position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 0; /* hide text content, use pseudo-elements */
+}
+.back-link::before {
+  content: '';
+  position: absolute;
+  width: 14px; height: 1.5px;
+  background: currentColor;
+  border-radius: 1px;
+}
+.back-link::after {
+  content: '';
+  position: absolute;
+  width: 6px; height: 6px;
+  border-left: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateX(3px) rotate(45deg);
+  border-radius: 0.5px;
+}
+.back-link:hover {
+  color: #c9a96e;
+  border-color: rgba(201, 169, 110, 0.4);
+  background: rgba(201, 169, 110, 0.08);
+}
+
+.article-detail { max-width: 680px; margin: 0 auto; }
+.article-detail h1 {
+  font-size: 1.75rem; margin-bottom: 8px; color: rgba(255, 255, 255, 0.92);
+  line-height: 1.35; font-weight: 700; letter-spacing: 0.03em;
+}
+.article-detail .article-meta { margin-bottom: 40px; color: rgba(255, 255, 255, 0.45); }
+.article-content {
+  font-size: 1.05rem; color: rgba(255, 255, 255, 0.82);
+  line-height: 1.9;
+}
+.article-content h2 {
+  font-size: 1.35rem; margin: 48px 0 16px; color: rgba(255, 255, 255, 0.90);
+  font-weight: 600; letter-spacing: 0.04em;
+}
+.article-content h3 {
+  font-size: 1.15rem; margin: 32px 0 12px; color: rgba(255, 255, 255, 0.88);
+  font-weight: 600; letter-spacing: 0.03em;
+}
+.article-content p { margin-bottom: 24px; }
+.article-content ul, .article-content ol { margin: 8px 0 24px 24px; }
+.article-content li { margin-bottom: 8px; color: rgba(255, 255, 255, 0.78); }
+.article-content code {
+  background: rgba(255, 255, 255, 0.08); padding: 2px 8px; border-radius: 4px;
+  font-size: 0.88em; font-family: "SFMono-Regular", "Consolas", "Liberation Mono", monospace;
+  color: rgba(255, 255, 255, 0.85);
+}
+.article-content pre {
+  background: rgba(0, 0, 0, 0.30); color: #cdd6f4; padding: 20px 24px;
+  border-radius: 8px; overflow-x: auto; margin: 16px 0 24px; font-size: 0.85rem;
+  line-height: 1.7;
+}
+.article-content pre code { background: none; padding: 0; color: inherit; }
+.article-content blockquote {
+  border-left: 2px solid #c9a96e; padding-left: 20px; color: rgba(255, 255, 255, 0.58);
+  margin: 24px 0; font-style: italic; line-height: 1.85;
+}
+.article-content strong { color: rgba(255, 255, 255, 0.95); font-weight: 600; }
+
+/* ========== About Page (dark bg adaptation) ========== */
+.about-section { padding: 0; max-width: 680px; }
+.about-section h1 {
+  font-size: 1.6rem; margin-bottom: 32px; color: rgba(255, 255, 255, 0.92);
+  font-weight: 700; letter-spacing: 0.04em;
+}
+.about-section p {
+  margin-bottom: 24px; color: rgba(255, 255, 255, 0.75); line-height: 1.95;
+}
+.about-section .skills {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-top: 32px;
+}
+.skill-tag {
+  color: #c9a96e; font-size: 0.85rem; background: none; padding: 0; border-radius: 0;
+  letter-spacing: 0.03em;
+}
+
+/* ========== Jiuba Detail Page ========== */
+.jiuba-detail .panel-article-item {
+  padding: 20px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: padding 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.jiuba-detail .panel-article-item:last-child { border-bottom: none; }
+.jiuba-detail .panel-article-item h3 {
+  font-size: 1.05rem;
+  color: rgba(255, 255, 255, 0.88);
+  font-weight: 500;
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+  transition: color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.jiuba-detail .panel-article-item h3:hover { color: #c9a96e; }
+.jiuba-detail .panel-article-item .panel-item-meta {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.40);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.jiuba-detail .panel-item-tag {
+  color: #c9a96e;
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+}
+
+/* ========== Empty State ========== */
+.empty-state {
+  text-align: center; padding: 64px 24px; color: rgba(255, 255, 255, 0.40);
+}
+.empty-state .icon { font-size: 2.5rem; margin-bottom: 16px; }
+
+/* ========== Responsive ========== */
+@media (max-width: 780px) {
+  .home-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .panel-inner {
+    padding: 40px 24px;
+  }
+  .panel-articles {
+    margin: 0 -24px;
+    padding: 16px 24px;
+  }
+}
+@media (max-width: 600px) {
+  .site-header { padding: 0 16px; }
+  .main-container { padding: 32px 16px 64px; }
+  .article-card { padding: 20px 0; }
+  .article-detail h1 { font-size: 1.4rem; }
+  .about-section { padding: 0; }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <span class="site-title">记韵 · 博客</span>
+  <ul class="nav-links">
+    <li><a href="#" onclick="navigateTo('home');return false;" id="nav-home">文章</a></li>
+    <li><a href="#" onclick="navigateTo('about');return false;" id="nav-about">关于</a></li>
+  </ul>
+</header>
+
+<main class="main-container" id="app"></main>
+
+<script>
+// ========== Article Data ==========
+const articles = [
+  {
+    id: 4,
+    title: "血稚",
+    date: "2026-05-26",
+    tags: ["文学", "思考"],
+    panel: "jiuba",
+    summary: "一篇关于蜻蜓稚虫实验的文学短篇。编号A-73-05的实验体在封闭的生态缸中完成了从卵到成虫的羽化，却在第一次振翅时撞上了透明的玻璃屏障。它用生命叩问着一个冰冷的问题：在绝对的理性与规则之下，那些无法被量化的渴望与本能，是否注定只能成为实验报告里一句轻描淡写的「异常行为」。",
+    content: `
+## 一
+
+换好衣服的教授，急忙推开实验室的门。今天的他，无论如何都要获得一个结果，一个完整的实验结果，那是他为了保住自己的位子，向学生分享成果，必须要完成的课题。
+
+两位学生离开生态缸前，让教授独自观察。样本A-73-05即将迎来它最后的时刻。
+
+**【日志条目：第402天 - 09:00】**
+
+**观察记录：个体A-73-05于09:00被观测到静止于缸底基质上，对机械刺激无反应。生命体征消失。终止确认。**
+
+**尸检显示：飞行肌能量储备完全枯竭，多处翅脉断裂，头部有微观出血点——均与频繁撞击隔离屏障的物理性损伤模式吻合。其死亡主因为能量耗尽，直接诱因为持续性异常行为。该样本数据极具价值，证明了在封闭环境下，某些非适应性本能行为可被强化至导致自我毁灭的程度。尸体归档，编号【A-73-05-TER】。**
+
+A-73-05最终耗尽力气，跌落在水缸底部，翅膀微微颤动，复眼依然倒映着它永远无法触及的窗外天空。
+
+"整理所有日志和研究数据，准备明天课上的汇报。"教授如释重负，随即打算离开实验室。
+
+"教授。"团队里的一位学生叫住了他："A-73-05是目前最成功的实验体，它为什么会在实验的最后做出近乎疯狂一般，想要毁掉自己的行为呢？"
+
+教授没有回答，离开了实验室，或许他的沉默便是最好的回应——在这个生态系统当中，作为造物主，你所要具备的，只有绝对的理性与客观的记录。
+
+教授走后，这个学生向另一位学生问道："样本间观察到「物质」的转移行为。这是血吗？"
+
+"并非哦，在实验室里，它只被称作「种内竞争导致的营养再分配」。但对于A-73-05来说，那就是它生存下去所需要的、温热的一切。"
+
+至于A-73-05实验体，在自然界中，有个更加为人们所熟知的称呼——蜻蜓。
+
+## 二
+
+- 项目编号：ODONATA-73【个体样本A-73-05全生命周期观察日志】
+
+- 【日志条目：第1天】
+
+- 观察记录：样本组A-73（卵簇）已置入生态缸A7。环境参数设定：水温25°C，pH 7.2，光照周期12L:12D。一切稳定，等待孵化。
+
+**【日志条目：第7天】**
+
+**观察记录：孵化完成。初步观测稚虫存活率98.3%。个体表现出负趋光性，聚集于缸底沉积物中。投入定量水蚤作为初始食物源。所有个体均表现出摄食反应。**
+
+命运在诞生前便已被书写。基因——这些与生俱来、无法选择的东西，决定了哪些"卵"将被放置在哪个培养皿中。
+
+水族箱的顶部有一盏模拟日照的灯。一些敏感的稚虫会本能地被光线吸引，向上游动，但很快会碰到冰冷的玻璃盖，被撞回水底。它们人生第一次触碰边界，感到困惑，但久而久之便习惯了。这个"灯"就是它们对"天空"的全部理解——一个无法触及的、温暖的光源。
+
+恒温恒湿的水族箱，经过消毒的纯净水，一切变量都被精确控制，排除了所有"意外"和"不洁"。一种令人窒息的"安全"。
+
+**【日志条目：第37天】**
+
+**观察记录：个体间开始出现资源竞争行为。个体A-73-05展现出高度攻击性，其捕食器官"面具"的弹射速度与精度优于同批样本。观察到其从其它个体处成功夺食。记录：A-73-05初期发育优势确立。**
+
+> "在这种状态下，久而久之，会出现'物质转移'的现象，即是种内捕食与互相残杀的行为，它们栖息在池塘、湖泊等水域中。这些环境中的食物资源是有限的，且分布并不均匀，当一个水域中稚虫的密度过高时，对食物的竞争会变得异常激烈。在食物匮乏时，身边其他弱小的、正在蜕皮的或刚孵化的同类，就成为了最易得、营养最丰富的'移动蛋白质'，吃掉同类不仅能消除一个竞争对手，还能直接为自己提供能量，增加自身的生存几率。"
+
+这就是水底的童年。在永恒的昏暗之中，生存的法则简单而血腥：成长，就是吞噬他人或被他人吞噬。A-73-05是这条法则最优秀的践行者，它用无数同类的"物质"滋养了自己，变得强壮而狰狞。它在这个体制内如鱼得水，并将体制内的规则内化为唯一真理。从未见过天空的人，会认为世界就是淤泥和水草。此时的"恶"是一种天真的、基于生存本能的残酷，它们不知道所谓"不残酷"的活法。
+
+**【日志条目：第155天】**
+
+**观察记录：随着样本密度压力提升，"物质转移"事件频率上升至日均1.3起。个体A-73-05已成为缸内顶级捕食者，体型为同期样本的127%。新现象：A-73-05周期性脱离底栖区域，垂直上浮至水体表面的人工光照平台下方，进行长时间探查。此行为不伴随捕食意图，且消耗额外能量。记录：定义此无效探索行为为异常行为K7。需关注其能量消耗。**
+
+**【日志条目：第288天】**
+
+**观察记录：异常行为K7在个体A-73-05身上固化且强化，频率升至每小时2-3次。行为模式升级为以头部撞击光照平台的透明基底。高速摄影显示撞击力度轻微但持续。分析：此行为可能关联其即将到来的羽化期预备行为，但在封闭环境中属严重适应不良。其头壳已出现因撞击导致的微观磨损。记录：将A-73-05标记为"高关注样本"，其羽化过程将成为关键观察节点。**
+
+一种莫名的冲动在它体内苏醒，驱使它一次次离开安全的淤泥，逆着重力，向上浮升。它撞向那片它无法理解的光明屏障，一次……又一次。那光是它的神，也是它的狱。它用身体叩问着一个它无法提出的问题，进行着一场无人理解、孤独的朝圣。
+
+科学日志冷静地记录着这一切，将它的渴望定义为"行为失序"，将它的执着定义为"有害变量"。
+
+## 三
+
+**【日志条目：第401天 - 03:00】**
+
+**观察记录：个体A-73-05攀附于人工栖息杆上，体壁于背中线处开裂。羽化过程启动。操作：开启高速摄像机，记录编号【MOLT-A73-05】。**
+
+**【日志条目：第401天 - 04:37】**
+
+**观察记录：羽化过程完成。新羽化成虫体型完整，四翅舒展充分，体色呈标准金属光泽。个体进入静止硬化期。**
+
+**【日志条目：第401天 - 08:15】**
+
+**观察记录：硬化期结束。个体A-73-05开始首次振翅。08:20，发起首次垂直飞行尝试。结果：与顶部隔离屏障发生高速碰撞。个体坠落回栖息杆，静止约5分钟。后续：该个体开始重复"起飞-碰撞-坠落"行为序列。飞行轨迹矢量分析表明，其所有尝试均精准指向观察窗外的自然光照方向。此行为已构成严重自损。能量消耗速率超标，累计碰撞次数：84次。**
+
+> "与漫长的稚虫期相比，成虫的寿命短得令人唏嘘。大多数蜻蜓的成虫寿命只有几周到几个月。极少部分能越冬的品种可以活得更久一些。这短暂的时光只有一个目标：求偶、繁殖、延续基因。它们没有时间可以浪费。"
+
+身体撕裂的痛楚、新躯体挣脱而出的挣扎、翅膀缓缓舒展的脆弱与美丽。这是它生命中最伟大的仪式。站在枯枝上，准备振动它那晶莹剔透的双翼，迎来生命的第一次飞翔时……它撞上了玻璃盖。
+
+它一次又一次地尝试……撞击声微弱而固执。它能看到实验室窗外真实的天空，有云朵飘过，有飞鸟掠过，那是它基因里镌刻的故乡，但它永远无法抵达。而造物主们，将这场震撼人心的自由抗争，简单地描述为"能量消耗速率超标"。
+
+这次研究的最终结果，便定格在了观察的第402天。
+
+**【日志条目：第402天 - 09:00】**
+
+**观察记录：个体A-73-05于09:00被观测到静止于缸底基质上，对机械刺激无反应。生命体征消失。终止确认。**
+
+**尸检显示：飞行肌能量储备完全枯竭，多处翅脉断裂，头部有微观出血点——均与频繁撞击隔离屏障的物理性损伤模式吻合。其死亡主因为能量耗尽，直接诱因为持续性异常行为。该样本数据极具价值，证明了在封闭环境下，某些非适应性本能行为可被强化至导致自我毁灭的程度。尸体归档，编号【A-73-05-TER】。**
+
+**后续操作：清理生态缸A7，投入新卵簇（编号：A-73-06）。环境参数重置。项目ODONATA-73，新一轮循环开始。**
+
+## 四
+
+教授对研究结果进行详细作结，台下的一位学生对教授的该项研究进行了提问："A-73-05是目前最成功的实验体，它为什么会在实验的最后做出近乎疯狂一般，想要毁掉自己的行为呢？"
+
+不同的学生但问了同样的问题，再次抛给了教授，而这一次，他没有回避，也无法回避。
+
+教授停下手中整理日志的动作，抬起眼，镜片后的目光冷静得像一块冰。他没有直接回答，而是用手指轻轻敲了敲那份关于A-73-05的最终报告：
+
+"同学，你犯了一个常见的认知错误。从我们的实验目的来看，A-73-05非但不是最成功的，反而是最失败的一个样本。"
+
+他拿起激光笔，在屏幕上指向日志"异常行为K7"几个字：
+
+"我们这个系统的设计目标，是研究在资源恒定、空间受限的环境下，种群的稳定与延续。最优解是像其他样本一样，适应规则、高效转化能量、完成繁殖使命、然后平静终止。这才是成功。而A-73-05，它浪费了巨大的能量去发展攻击性，又在成熟后，将更为巨大的能量浪费在一种无效、自毁的行为上。它的能量转化效率、它的生存策略，从系统优化的角度看，是彻底失败的。"
+
+同学似乎想反驳："可是它那么强壮，它完成了羽化……"
+
+"羽化不是目的，繁殖才是。飞翔不是目的，传递基因才是。"教授打断了他，语气斩钉截铁："它所有的'强壮'，最终都没有服务于终极目的，反而导向了自我毁灭。它无比精准地飞向窗外，这恰恰证明了它的神经系统是高度发达且正常的，但正因如此，它的行为才更显失败——它的高级神经活动，竟然无法克服一个低级的环境限制信号！"
+
+它无法理解"玻璃"这个概念，它的世界模型里没有"不可穿透的透明屏障"。于是，它基因里那个最强大的指令——飞向光与天空，在找不到出口后，变成了一个致命的死循环程序。它执行得越精准，就越快走向终结。
+
+教授坐回去，给出了一个冰冷的、最终的结论：
+
+> "它不是疯狂。恰恰相反，它是因为过于正常，过于完美地继承了在旷野中进化出的本能，才无法在这个高度特化的新环境中存活。它的死，证明了这个实验环境的有效性——它成功地塑造了一个新世界，并淘汰了所有无法适应这个新世界的'旧时代的完美个体'。"
+
+> "请记住，在生态学里，没有绝对的优秀，只有对特定环境的适应。A-73-05是我们这个小小世界里，最壮丽、也最昂贵的不适应者，而它空出的位置，很快会有更成功的样本来填补。"
+
+## 尾声
+
+它最终跌落在故事开始的地方。那双曾承载着天空梦想的翅膀，成为实验报告里几行关于"翅脉断裂"的冰冷注释。镊子轻轻夹走它的尸体，仿佛只是清除了一个出错的数据点。
+
+新的卵簇被投入清澈的水中，在恒定的光线下，新一轮的生命轮回——或者说，新一轮的禁锢实验——就此默然开启。
+
+它的挣扎与渴望，它用生命发出的提问，最终化为日志末尾的一句轻描淡写：
+
+**新一轮循环开始。**
+
+——2025.9.7
+    `
+  },
+  {
+    id: 1,
+    title: "从零搭建个人博客：为什么选择静态网站",
+    date: "2026-05-20",
+    tags: ["技术", "前端"],
+    panel: "zatan",
+    summary: "在动态博客平台泛滥的今天，静态网站凭借极致的加载速度、零维护成本和完全的数据掌控权，正在重新成为技术写作者的首选。本文探讨静态博客的优势与技术选型思路。",
+    content: `
+## 静态网站的复兴
+
+过去十年，WordPress、Ghost 等动态博客平台占据了主导地位。它们功能强大，但也带来了服务器维护、数据库管理、安全补丁等一系列负担。对于一个只想专注于写作的人来说，这些"额外工作"往往让人望而却步。
+
+近年来，随着 Jekyll、Hugo、Hexo 等静态网站生成器的成熟，以及 GitHub Pages、Netlify、Vercel 等免费托管平台的普及，静态博客迎来了复兴。
+
+## 为什么选择静态网站
+
+### 1. 极致的加载速度
+
+静态网站本质上就是 HTML、CSS 和 JavaScript 文件的集合。没有数据库查询，没有服务端渲染，浏览器请求什么就返回什么。配合 CDN，页面加载速度可以轻松达到毫秒级别。
+
+### 2. 零运维成本
+
+不需要管理服务器，不需要升级数据库，不需要担心安全漏洞。把你的文件部署到任何静态托管服务上，就可以高枕无忧。
+
+### 3. 数据完全掌控
+
+所有文章都以纯文本（通常是 Markdown）形式存储。你可以用 Git 做版本控制，可以随时迁移到其他平台，永远不会被某个服务商锁定。
+
+### 4. 专注写作本身
+
+没有复杂的后台管理系统，没有插件配置的干扰。打开编辑器，写下文字，提交到 Git，自动部署——这就是全部的发布流程。
+
+## 技术选型建议
+
+对新手来说，我推荐以下组合：
+
+- **内容格式**：Markdown——简洁、通用、专注于内容
+- **生成工具**：Hugo 或 Hexo——编译速度快，生态完善
+- **托管平台**：GitHub Pages——免费、稳定、自带 CI/CD
+- **自定义域名**：可选，但强烈建议，这是你互联网上的永久门牌号
+
+## 结语
+
+搭建博客最好的时机是十年前，其次是现在。不要纠结于选什么工具、用什么主题——开始写，才是最重要的。
+    `
+  },
+  {
+    id: 2,
+    title: "代码整洁之道：可读性比聪明更重要",
+    date: "2026-05-15",
+    tags: ["技术", "编程"],
+    panel: "zatan",
+    summary: "好的代码不是写给机器看的，而是写给下一个维护你代码的人看的——而那个人很可能就是六个月后的你自己。本文分享几个提升代码可读性的实用原则。",
+    content: `
+## 代码是写给人看的
+
+Donald Knuth 说过："程序是写给人看的，只是顺便让机器执行。"这句话道出了编程的核心——代码的首要读者是人，不是编译器。
+
+> 任何一个傻瓜都能写出计算机能理解的代码，但只有优秀的程序员才能写出人能理解的代码。
+> — Martin Fowler
+
+## 命名：最便宜的文档
+
+好的命名是代码文档中最便宜也最有效的形式。一个清晰的名字可以替代大段注释。
+
+### 反面示例
+
+\`\`\`python
+def calc(a, b, t):
+    if t == 1:
+        return a + b
+    else:
+        return a * b * 0.9
+\`\`\`
+
+### 正面示例
+
+\`\`\`python
+def calculate_price(base_price: float, quantity: int, has_discount: bool) -> float:
+    if has_discount:
+        return base_price * quantity * 0.9
+    return base_price * quantity
+\`\`\`
+
+## 函数应该只做一件事
+
+一个函数如果做了太多事情，就会变得难以测试、难以复用、难以理解。
+
+- 每个函数应保持简短（建议不超过 30 行）
+- 函数名应准确描述它做什么
+- 如果一个函数需要"和"来描述，它可能做了不止一件事
+
+## 注释的黄金法则
+
+**注释应该解释"为什么"而不是"做了什么"。**
+
+代码本身已经说明了"做了什么"。如果你的代码需要注释才能被理解，那可能是代码本身需要重构。
+
+不过有一个例外——当你不得不采用一个非直观的解决方案时（比如为了性能做了特殊处理，或者绕过了一个已知的第三方 bug），一定要写清楚原因。
+
+## 持续重构
+
+代码整洁不是一次性的工作，而是一个持续的过程。遵循童子军原则：**每次提交时，让代码比之前更干净一点。**
+
+不需要专门安排"重构周"，在日常开发中不断小步改进，积少成多。
+    `
+  },
+  {
+    id: 3,
+    title: "独处的力量：在喧嚣中找回思考的节奏",
+    date: "2026-05-08",
+    tags: ["生活", "思考"],
+    panel: "zatan",
+    summary: "信息过载的时代，我们被通知、消息、推送持续轰炸。刻意地给自己留出独处时间，不是逃避社交，而是给大脑一个整理和深加工信息的空间。",
+    content: `
+## 我们正在失去的能力
+
+你有没有发现，自己越来越难以忍受"什么都不做"的状态？
+
+排队等咖啡的 3 分钟，我们掏出手机；电梯里的 20 秒，我们刷新朋友圈；甚至上厕所时，也要带着手机。我们正在系统性地消灭生活中的每一秒"空白"。
+
+但这种"空白"恰恰是深度思考发生的土壤。
+
+## 无聊是创造力的催化剂
+
+神经科学研究表明，当大脑处于"默认模式网络"（Default Mode Network）状态时——也就是我们发呆、走神、不做任何具体任务的状态——恰恰是最具创造力的时刻。
+
+那些看似不相关的想法被连接起来，旧的记忆被重新整合，新的洞见自然浮现。很多人在洗澡、散步、或者躺在床上睡不着时，突然想通了困扰已久的问题——这不是巧合。
+
+## 刻意独处的实践
+
+### 1. 每天 30 分钟的散步
+
+不带手机，不听播客，不设目的地。只是走，让思绪自由漂移。你会惊讶于这 30 分钟带来的清醒感。
+
+### 2. 写作作为思考工具
+
+写作不只是记录，写作本身就是思考的过程。当你把模糊的想法写成文字，它们会变得清晰。不需要公开发表，写给自己看就足够有价值。
+
+### 3. 创造"无屏幕"时段
+
+睡前 1 小时把手机放在客厅。早晨起床后前 30 分钟不碰任何电子设备。把这两个时间段还给自己的大脑。
+
+## 结语
+
+独处不是孤独。孤独是渴望陪伴而不得的痛苦，独处是主动选择与自己的思想共处。
+
+在这个永远在线的世界里，能够安静地独处、深入地思考，正成为一种稀缺而珍贵的能力。保护好它。
+    `
+  }
+];
+
+// ========== State & Router ==========
+const validRoutes = ['home', 'about', 'zatan', 'panel2', 'jiuba'];
+const app = document.getElementById('app');
+let previousRoute = 'home';
+
+function navigateTo(route, data) {
+  const params = data ? `/${data.id}` : '';
+  const { route: currentRoute } = getRoute();
+  if (route === 'post') previousRoute = currentRoute === 'home' ? 'jiuba' : currentRoute;
+  window.location.hash = `#/${route}${params}`;
+  updateNav(route);
+  render();
+}
+
+function getRoute() {
+  const hash = window.location.hash.slice(2) || 'home';
+  const [route, queryStr] = hash.split('?');
+  if (validRoutes.includes(route)) return { route };
+  if (/^\d+$/.test(route)) return { route: 'post', postId: parseInt(route) };
+  const postMatch = hash.match(/^post\/(\d+)/);
+  if (postMatch) return { route: 'post', postId: parseInt(postMatch[1]) };
+  return { route: 'home' };
+}
+
+function updateNav(current) {
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  const navMap = { home: 'nav-home', about: 'nav-about' };
+  const highlightHome = ['home', 'post', 'zatan', 'panel2', 'jiuba'];
+  if (highlightHome.includes(current)) {
+    document.getElementById('nav-home').classList.add('active');
+  } else if (navMap[current]) {
+    document.getElementById(navMap[current]).classList.add('active');
+  }
+}
+
+// ========== Render ==========
+function render() {
+  const { route, postId } = getRoute();
+  if (route === 'post') { renderPost(postId); updateNav('post'); }
+  else if (route === 'about') { renderAbout(); updateNav('about'); }
+  else if (route === 'zatan') { renderZatan(); updateNav('zatan'); }
+  else if (route === 'panel2') { renderPanel2(); updateNav('panel2'); }
+  else if (route === 'jiuba') { renderJiuba(); updateNav('jiuba'); }
+  else { renderHome(); updateNav('home'); }
+}
+
+function renderHome() {
+  const html = `
+    <div class="home-grid">
+      <div class="home-panel">
+        <div class="panel-inner" style="background-image: url('images/panel1.jpg')" onclick="navigateTo('zatan')">
+          <div class="panel-title">杂谈</div>
+        </div>
+      </div>
+      <div class="home-panel">
+        <div class="panel-inner" style="background-image: url('images/panel2.jpg')" onclick="navigateTo('panel2')">
+          <div class="panel-title">旅人</div>
+        </div>
+      </div>
+      <div class="home-panel">
+        <div class="panel-inner" style="background-image: url('images/panel3.jpg')" onclick="navigateTo('jiuba')">
+          <div class="panel-title">深夜酒馆</div>
+        </div>
+      </div>
+    </div>`;
+  app.innerHTML = html;
+}
+
+function renderZatan() {
+  const zatanArticles = articles.filter(a => a.panel === 'zatan');
+  const articlesHtml = zatanArticles.map(a => `
+    <div class="panel-article-item" onclick="navigateTo('post', {id:${a.id}})">
+      <h3>${a.title}</h3>
+      <div class="panel-item-meta">
+        <span>${a.date}</span>
+        ${a.tags.map(t => `<span class="panel-item-tag">${t}</span>`).join('')}
+      </div>
+    </div>`).join('');
+
+  app.innerHTML = `
+    <a href="#" class="back-link" onclick="navigateTo('home');return false;">←</a>
+    <div class="jiuba-detail">
+      <h1 style="font-size:1.5rem; font-weight:600; color:rgba(255,255,255,0.92); margin-bottom:32px; letter-spacing:0.04em;">杂谈</h1>
+      <div class="jiuba-article-list">
+        ${articlesHtml}
+      </div>
+    </div>`;
+}
+
+function renderPanel2() {
+  app.innerHTML = `
+    <a href="#" class="back-link" onclick="navigateTo('home');return false;">←</a>
+    <div class="empty-state">
+      <div class="icon">📂</div>
+      <p>旅人板块暂无内容</p>
+      <p style="font-size:0.85rem; margin-top:4px;">内容正在筹备中</p>
+    </div>`;
+}
+
+function renderJiuba() {
+  const jiubaArticles = articles.filter(a => a.panel === 'jiuba');
+  const articlesHtml = jiubaArticles.map(a => `
+    <div class="panel-article-item" onclick="navigateTo('post', {id:${a.id}})">
+      <h3>${a.title}</h3>
+      <div class="panel-item-meta">
+        <span>${a.date}</span>
+        ${a.tags.map(t => `<span class="panel-item-tag">${t}</span>`).join('')}
+      </div>
+    </div>`).join('');
+
+  app.innerHTML = `
+    <a href="#" class="back-link" onclick="navigateTo('home');return false;">←</a>
+    <div class="jiuba-detail">
+      <h1 style="font-size:1.5rem; font-weight:600; color:rgba(255,255,255,0.92); margin-bottom:32px; letter-spacing:0.04em;">深夜酒馆</h1>
+      <div class="jiuba-article-list">
+        ${articlesHtml}
+      </div>
+    </div>`;
+}
+
+function renderPost(postId) {
+  const article = articles.find(a => a.id === postId);
+  if (!article) {
+    app.innerHTML = '<div class="empty-state"><div class="icon">📄</div><p>文章未找到</p><a href="#" onclick="navigateTo(\'home\');return false;" class="back-link">← 返回文章列表</a></div>';
+    return;
+  }
+  // Convert markdown-like content to HTML
+  let content = article.content.trim();
+  // Simple markdown-to-HTML conversion
+  content = content
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`{3}(\w*)\n([\s\S]*?)`{3}/g, '<pre><code>$2</code></pre>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+
+  const html = `
+    <a href="#" class="back-link" onclick="navigateTo('${previousRoute}');return false;">←</a>
+    <div class="article-detail">
+      <h1>${article.title}</h1>
+      <div class="article-meta">
+        <span>${article.date}</span>
+        ${article.tags.map(t => `<span class="card-tag">${t}</span>`).join('')}
+      </div>
+      <div class="article-content"><p>${content}</p></div>
+    </div>
+  `;
+  app.innerHTML = html;
+}
+
+function renderAbout() {
+  app.innerHTML = `
+    <div class="about-section">
+      <h1>关于我</h1>
+      <p>你好，我是网站的发起人，一个喜欢思考、热爱写作的人。</p>
+      <p>
+        这个网站是我在互联网上的一方小天地。这里没有广告、没有追踪、没有算法推荐，只有纯粹的分享。我希望通过文字，把那些在独处和阅读中沉淀的想法记录下来，也希望能给偶然路过的你带来一点启发。
+      </p>
+      <p>
+        博客的主题围绕三个板块展开，"杂谈"是收集的科普与思考文章、"旅人"为过路至此的人们，投稿作品提供了空间、"深夜酒馆"是我本人的作品合集，放在这里供您指点。
+      </p>
+      <p>
+        我相信好的文字应该简洁有力，好的代码应该清晰易懂，好的生活应该从容不迫。这里没有任何盈利，只做真诚的分享。
+      </p>
+      <p><strong>联系方式：</strong>1604698269@qq.com / qiguanzhengxuan@gmail.com</p>
+      <p style="margin-top: 1.5rem; text-align: center; font-style: italic; color: rgba(255,255,255,0.7);">
+        诚挚的邀请您前来投稿交流。
+      </p>
+    </div>
+  `;
+}
+
+// ========== Init ==========
+window.addEventListener('hashchange', render);
+window.addEventListener('DOMContentLoaded', render);
+</script>
+
+</body>
+</html>
